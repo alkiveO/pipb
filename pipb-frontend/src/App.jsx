@@ -1,12 +1,64 @@
-import { useState } from 'react'
-import Login from './pages/Login'
-import Register from './pages/Register'
+import { useState, useEffect } from 'react'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
-import './App.css'
+import Navbar from './components/layout/Navbar'
+import Footer from './components/layout/Footer'
+import Hero from './components/Hero'
+import About from './components/About'
+import ProductsSection from './components/ProductsSection'
+import HowItWorks from './components/HowItWorks'
+import Reviewers from './components/Reviewers'
+import News from './components/News'
 
 function App() {
-  const [page, setPage] = useState('home')
+  // ✅ Init page berdasarkan URL + token
+  const [page, setPage] = useState(() => {
+    const path = window.location.pathname
+    const hasToken = localStorage.getItem('token')
+
+    if (path === '/login') return 'login'
+    if (path === '/register') return 'register'
+    if (path === '/dashboard' || hasToken) return 'dashboard'
+    if (path === '/products') return 'products'
+    return 'home'
+  })
+
+  // ✅ Sync saat tombol back/forward browser ditekan
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname
+      const hasToken = localStorage.getItem('token')
+
+      if (path === '/login') setPage('login')
+      else if (path === '/register') setPage('register')
+      else if (path === '/dashboard') setPage('dashboard')
+      else if (path === '/products') setPage('products')
+      else if (hasToken) setPage('dashboard')
+      else setPage('home')
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // ✅ Sync URL saat page berubah
+  useEffect(() => {
+    const pathMap = {
+      login: '/login',
+      register: '/register',
+      dashboard: '/dashboard',
+      products: '/products',
+      home: '/',
+    }
+
+    const targetPath = pathMap[page]
+
+    if (targetPath && window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', targetPath)
+    }
+  }, [page])
 
   if (page === 'login') {
     return (
@@ -18,210 +70,41 @@ function App() {
   }
 
   if (page === 'register') {
-    return (
-      <Register
-        onRegister={() => setPage('login')}
-      />
-    )
+    return <Register onRegister={() => setPage('login')} />
   }
 
   if (page === 'dashboard') {
-    return (
-      <Dashboard
-        onLogout={() => setPage('login')}
-      />
-    )
+    return <Dashboard onLogout={() => setPage('login')} />
   }
 
   if (page === 'products') {
     return (
       <Products
         onBack={() => setPage('home')}
+        onNavigate={setPage}
+        page="products"
+        onCreateProduct={() => setPage('login')}
+        onProductDetail={() => setPage('login')}
       />
     )
   }
 
   return (
-    <div className="app">
-      <nav className="navbar">
-        <div className="logo">
-          PIPB
-        </div>
-
-        <div className="nav-links">
-          <a href="#home">
-            Home
-          </a>
-
-          <button
-            type="button"
-            className="nav-link-button"
-            onClick={() => setPage('products')}
-          >
-            Produk
-          </button>
-
-          <a href="#berita">
-            Berita
-          </a>
-
-          <a href="#tentang">
-            Tentang
-          </a>
-
-          <button
-            type="button"
-            className="nav-submit"
-            onClick={() => setPage('login')}
-          >
-            Submit Product
-          </button>
-        </div>
-      </nav>
+    <>
+      <Navbar onLogin={() => setPage('login')} onNavigate={setPage} page="home" />
 
       <main>
-        <section
-          className="hero"
-          id="home"
-        >
-          <div className="hero-content">
-            <p className="hero-label">
-              PIPB
-            </p>
-
-            <h1>
-              Menghubungkan Ide,
-              <br />
-              Inovasi, dan Peluang.
-            </h1>
-
-            <p className="hero-description">
-              Platform yang mempertemukan mahasiswa dengan ide,
-              inovasi, dan peluang pengembangan produk.
-            </p>
-
-            <button
-              className="hero-button"
-              onClick={() => setPage('products')}
-            >
-              Lihat Produk
-            </button>
-          </div>
-        </section>
-
-        <section
-          className="about"
-          id="tentang"
-        >
-          <div className="section-container">
-            <p className="section-label">
-              TENTANG PIPB
-            </p>
-
-            <h2>
-              Mendorong ide menjadi
-              <br />
-              peluang nyata.
-            </h2>
-
-            <p className="about-text">
-              PIPB merupakan platform untuk memperkenalkan berbagai
-              produk dan inovasi mahasiswa serta memberikan ruang untuk
-              berkembang dan dikenal lebih luas.
-            </p>
-          </div>
-        </section>
-
-        <section
-          className="products"
-          id="produk"
-        >
-          <div className="section-container">
-            <p className="section-label">
-              PRODUK
-            </p>
-
-            <h2>
-              Produk Unggulan
-            </h2>
-
-            <button
-              type="button"
-              className="hero-button"
-              onClick={() => setPage('products')}
-            >
-              Lihat Semua Produk
-            </button>
-          </div>
-        </section>
-
-        <section
-          className="news"
-          id="berita"
-        >
-          <div className="section-container">
-            <p className="section-label">
-              BERITA
-            </p>
-
-            <h2>
-              Berita Terbaru
-            </h2>
-
-            <div className="news-list">
-              <article className="news-card">
-                <p className="news-date">
-                  Informasi PIPB
-                </p>
-
-                <h3>
-                  Berita dan informasi terbaru PIPB
-                </h3>
-
-                <p>
-                  Informasi mengenai kegiatan serta perkembangan
-                  produk mahasiswa akan ditampilkan di sini.
-                </p>
-              </article>
-
-              <article className="news-card">
-                <p className="news-date">
-                  Produk Mahasiswa
-                </p>
-
-                <h3>
-                  Perkembangan produk mahasiswa
-                </h3>
-
-                <p>
-                  Lihat berbagai perkembangan produk dan inovasi
-                  yang dikembangkan oleh mahasiswa.
-                </p>
-              </article>
-            </div>
-          </div>
-        </section>
+        <Hero onProducts={() => setPage('products')} />
+        <About />
+        <ProductsSection onProducts={() => setPage('products')} />
+        <HowItWorks />
+        <Reviewers />
+        <News />
       </main>
 
-      <footer>
-        <div className="footer-content">
-          <div>
-            <h3>
-              PIPB
-            </h3>
-
-            <p>
-              Menghubungkan ide, inovasi, dan peluang.
-            </p>
-          </div>
-
-          <p>
-            © 2026 PIPB. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    </div>
+      <Footer />
+    </>
   )
 }
 
-export default App  
+export default App
