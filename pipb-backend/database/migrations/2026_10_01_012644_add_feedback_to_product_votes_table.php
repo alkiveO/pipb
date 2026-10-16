@@ -6,23 +6,38 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('product_votes', function (Blueprint $table) {
-            $table->text('feedback')->nullable()->after('score');
+            if (! Schema::hasColumn('product_votes', 'design_score')) {
+                $table->unsignedTinyInteger('design_score')->nullable();
+            }
+
+            if (! Schema::hasColumn('product_votes', 'usability_score')) {
+                $table->unsignedTinyInteger('usability_score')->nullable();
+            }
+
+            if (! Schema::hasColumn('product_votes', 'creativity_score')) {
+                $table->unsignedTinyInteger('creativity_score')->nullable();
+            }
+
+            if (! Schema::hasColumn('product_votes', 'content_score')) {
+                $table->unsignedTinyInteger('content_score')->nullable();
+            }
+
+            if (! Schema::hasColumn('product_votes', 'overall_score')) {
+                $table->decimal('overall_score', 5, 2)->nullable();
+            }
+
+            if (! Schema::hasColumn('product_votes', 'feedback')) {
+                $table->text('feedback')->nullable();
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('product_votes', function (Blueprint $table) {
-            $table->dropColumn('feedback');
-        });
+        // Kolom tidak dihapus karena mungkin sudah digunakan
+        // oleh migration sebelumnya atau data yang tersimpan.
     }
 };

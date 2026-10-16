@@ -2,43 +2,129 @@ import { useEffect, useState } from 'react'
 import { getNews } from '../services/api'
 import Container from './ui/Container'
 
-// Fallback kalau backend kosong
+const API_URL = 'http://127.0.0.1:8000/api'
+const STORAGE_URL = API_URL.replace(/\/api\/?$/, '/storage')
+
 const placeholderNews = [
-  { id: 1, date: '24 September 2026', title: 'Pengumuman terbaru PIPB' },
-  { id: 2, date: '20 September 2026', title: 'Informasi kegiatan PIPB' },
-  { id: 3, date: '15 September 2026', title: 'Program dan kegiatan mahasiswa' },
+  {
+    id: 1,
+    date: '24 September 2026',
+    title: 'Pengumuman terbaru PIPB',
+  },
+  {
+    id: 2,
+    date: '20 September 2026',
+    title: 'Informasi kegiatan PIPB',
+  },
+  {
+    id: 3,
+    date: '15 September 2026',
+    title: 'Program dan kegiatan mahasiswa',
+  },
 ]
 
-function News() {
+function getImageUrl(image) {
+  if (!image) return null
+
+  if (/^https?:\/\//i.test(image)) {
+    return image
+  }
+
+  const path = image
+    .replace(/^\/+/, '')
+    .replace(/^(storage|public)\//, '')
+
+  return `${STORAGE_URL}/${path}`
+}
+
+function News({ onNavigate, page = 'home' }) {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getNews()
-      .then((data) => {
-        const list = data?.data || data || []
-        setNews(Array.isArray(list) ? list.slice(0, 5) : [])
-      })
-      .catch((error) => console.error('Gagal memuat berita:', error))
-      .finally(() => setLoading(false))
+    let active = true
+
+    const fetchNews = async () => {
+      try {
+        const response = await getNews()
+        const list = response?.data ?? response
+
+        if (active) {
+          setNews(Array.isArray(list) ? list : [])
+        }
+      } catch (error) {
+        console.error('Gagal memuat berita:', error)
+
+        if (active) {
+          setNews([])
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchNews()
+
+    return () => {
+      active = false
+    }
   }, [])
 
-  const items = !loading && news.length > 0
-    ? news.map((item) => ({
-        id: item.id,
-        date: item.created_at
-          ? new Date(item.created_at).toLocaleDateString('id-ID', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })
-          : 'Tanpa tanggal',
-        title: item.title,
+  const formatDate = (date) => {
+    if (!date) return 'Tanpa tanggal'
+
+    const parsedDate = new Date(date)
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return 'Tanpa tanggal'
+    }
+
+    return parsedDate.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  const items = news.length > 0
+    ? news.slice(0, 5).map((item) => ({
+        ...item,
+        date: formatDate(
+          item.published_at || item.created_at
+        ),
+        imageUrl: getImageUrl(
+          item.image ||
+          item.poster ||
+          item.thumbnail
+        ),
       }))
-    : placeholderNews
+    : !loading
+      ? placeholderNews.map((item) => ({
+          ...item,
+          imageUrl: null,
+          isPlaceholder: true,
+        }))
+      : []
+
+  const handleOpenDetail = () => {
+    if (typeof onNavigate === 'function') {
+      onNavigate('login')
+      return
+    }
+
+    window.history.pushState({}, '', '/login')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }
 
   return (
-    <section id="berita" className="bg-ink py-24 text-paper md:py-32">
+    <section
+      id="berita"
+      className={`bg-ink py-24 text-paper md:py-32 ${
+        page === 'news' ? 'min-h-screen' : ''
+      }`}
+    >
       <Container>
         <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <div>
@@ -57,26 +143,57 @@ function News() {
         </div>
 
         <div className="mt-16 border-t border-paper/15">
-          {items.map((item, index) => (
-            <article
-              key={item.id}
-              className="group grid items-center gap-2 border-b border-paper/15 py-8 transition-all md:grid-cols-[5rem_12rem_1fr_auto] md:gap-8 md:hover:pl-4"
-            >
-              <p className="hidden text-sm text-paper/40 md:block">
-                {String(index + 1).padStart(2, '0')}
-              </p>
+          {loading ? (
+            <p className="py-10 text-paper/60">
+              Memuat berita...
+            </p>
+          ) : items.length === 0 ? (
+            <p className="py-10 text-paper/60">
+              Belum ada berita yang tersedia.
+            </p>
+          ) : (
+            items.map((item, index) => (
+              <article
+                key={item.id}
+                className="group border-b border-paper/15 transition-all md:hover:pl-4"
+              >
+                <button
+                  type="button"
+                  onClick={handleOpenDetail}
+                  className="grid w-full cursor-pointer items-center gap-4 py-8 text-left md:grid-cols-[5rem_12rem_1fr_auto] md:gap-8"
+                >
+                  <p className="hidden text-sm text-paper/40 md:block">
+                    {String(index + 1).padStart(2, '0')}
+                  </p>
 
-              <p className="text-sm text-paper/50">{item.date}</p>
+                  <div className="text-sm text-paper/50">
+                    {item.date}
+                  </div>
 
-              <h3 className="text-xl font-medium tracking-tight md:text-2xl">
-                {item.title}
-              </h3>
+                  <div className="flex min-w-0 items-center gap-5">
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt=""
+                        className="h-20 w-28 shrink-0 rounded-lg border border-paper/15 object-cover"
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    )}
 
-              <div className="hidden h-12 w-12 items-center justify-center rounded-full border border-paper/25 text-xl transition-colors group-hover:bg-paper group-hover:text-ink md:flex">
-                ↗
-              </div>
-            </article>
-          ))}
+                    <h3 className="text-xl font-medium tracking-tight md:text-2xl">
+                      {item.title}
+                    </h3>
+                  </div>
+
+                  <div className="hidden h-12 w-12 items-center justify-center rounded-full border border-paper/25 text-xl transition-colors group-hover:bg-paper group-hover:text-ink md:flex">
+                    ↗
+                  </div>
+                </button>
+              </article>
+            ))
+          )}
         </div>
       </Container>
     </section>

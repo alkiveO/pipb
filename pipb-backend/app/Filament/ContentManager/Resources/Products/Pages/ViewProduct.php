@@ -4,6 +4,7 @@ namespace App\Filament\ContentManager\Resources\Products\Pages;
 
 use App\Filament\ContentManager\Resources\Products\ProductResource;
 use App\Models\ProductVote;
+use App\Notifications\ProductEvaluated;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -87,7 +88,7 @@ class ViewProduct extends ViewRecord
                         $data['content_score']
                     ) / 4;
 
-                    ProductVote::updateOrCreate(
+                    $vote = ProductVote::updateOrCreate(
                         [
                             'product_id' => $this->record->id,
                             'content_manager_id' => auth()->id(),
@@ -102,6 +103,14 @@ class ViewProduct extends ViewRecord
                             'feedback' => $data['feedback'],
                         ]
                     );
+
+                    $product = $this->record->fresh('user');
+
+                    if ($product?->user) {
+                        $product->user->notify(
+                            new ProductEvaluated($product, $vote)
+                        );
+                    }
                 })
                 ->successNotificationTitle(
                     'Evaluasi produk berhasil disimpan.'

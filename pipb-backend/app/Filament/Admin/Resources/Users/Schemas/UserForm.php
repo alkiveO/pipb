@@ -28,10 +28,10 @@ class UserForm
                     ->label('Role')
                     ->options([
                         'admin' => 'Admin',
-                        'content_manager' => 'Content Manager / Dosen',
-                        'mahasiswa' => 'Mahasiswa',
+                        'content_manager' => 'Dosen',
                     ])
-                    ->default('mahasiswa')
+                    ->default('content_manager')
+                    ->selectablePlaceholder(false)
                     ->required()
                     ->live(),
 
@@ -75,3 +75,4 @@ class UserForm
             ]);
     }
 }
+

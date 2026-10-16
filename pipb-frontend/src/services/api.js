@@ -1,30 +1,25 @@
 export const API_URL = 'http://127.0.0.1:8000/api'
 
-export const login = async (
-  email,
-  password
-) => {
-  const response = await fetch(
-    `${API_URL}/login`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    }
-  )
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATION
+|--------------------------------------------------------------------------
+*/
+
+export const login = async (email, password) => {
+  const response = await fetch(`${API_URL}/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message || 'Login gagal'
-    )
+    throw new Error(data.message || 'Login gagal')
   }
 
   return data
@@ -36,37 +31,29 @@ export const register = async (
   password,
   passwordConfirmation
 ) => {
-  const response = await fetch(
-    `${API_URL}/register`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        password_confirmation:
-          passwordConfirmation,
-      }),
-    }
-  )
+  const response = await fetch(`${API_URL}/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      name,
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+    }),
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Registrasi gagal'
+      validationErrors || data.message || 'Registrasi gagal'
     )
   }
 
@@ -76,23 +63,18 @@ export const register = async (
 export const logout = async () => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(
-    `${API_URL}/logout`,
-    {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  )
+  const response = await fetch(`${API_URL}/logout`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message || 'Logout gagal'
-    )
+    throw new Error(data.message || 'Logout gagal')
   }
 
   return data
@@ -107,32 +89,26 @@ export const logout = async () => {
 export const getNotifications = async () => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(
-    `${API_URL}/notifications`,
-    {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  )
+  const response = await fetch(`${API_URL}/notifications`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal mengambil notifikasi'
+      data.message || 'Gagal mengambil notifikasi'
     )
   }
 
   return data
 }
 
-export const markNotificationAsRead = async (
-  notificationId
-) => {
+export const markNotificationAsRead = async (notificationId) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -151,7 +127,7 @@ export const markNotificationAsRead = async (
   if (!response.ok) {
     throw new Error(
       data.message ||
-      'Gagal menandai notifikasi sebagai dibaca'
+        'Gagal menandai notifikasi sebagai dibaca'
     )
   }
 
@@ -165,31 +141,23 @@ export const markNotificationAsRead = async (
 */
 
 export const getProducts = async () => {
-  const response = await fetch(
-    `${API_URL}/products`,
-    {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  )
+  const response = await fetch(`${API_URL}/products`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      'Gagal mengambil produk'
-    )
+    throw new Error(data.message || 'Gagal mengambil produk')
   }
 
   return data
 }
 
-export const getProductById = async (
-  productId
-) => {
+export const getProductById = async (productId) => {
   const response = await fetch(
     `${API_URL}/products/${productId}`,
     {
@@ -204,8 +172,7 @@ export const getProductById = async (
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal mengambil detail produk'
+      data.message || 'Gagal mengambil detail produk'
     )
   }
 
@@ -213,23 +180,17 @@ export const getProductById = async (
 }
 
 export const getCategories = async () => {
-  const response = await fetch(
-    `${API_URL}/categories`,
-    {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  )
+  const response = await fetch(`${API_URL}/categories`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      'Gagal mengambil kategori'
-    )
+    throw new Error(data.message || 'Gagal mengambil kategori')
   }
 
   return data
@@ -242,23 +203,17 @@ export const getCategories = async () => {
 */
 
 export const getNews = async () => {
-  const response = await fetch(
-    `${API_URL}/news`,
-    {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  )
+  const response = await fetch(`${API_URL}/news`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      'Gagal mengambil berita'
-    )
+    throw new Error(data.message || 'Gagal mengambil berita')
   }
 
   return data
@@ -280,39 +235,32 @@ export const createProduct = async (
 ) => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(
-    `${API_URL}/products`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        category_id: categoryId,
-        name,
-        description,
-        initial_fund: initialFund,
-        target_fund: targetFund,
-        launch_date: launchDate || null,
-      }),
-    }
-  )
+  const response = await fetch(`${API_URL}/products`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      category_id: categoryId,
+      name,
+      description,
+      initial_fund: initialFund,
+      target_fund: targetFund,
+      launch_date: launchDate || null,
+    }),
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal membuat produk'
+      validationErrors || data.message || 'Gagal membuat produk'
     )
   }
 
@@ -322,10 +270,85 @@ export const createProduct = async (
 export const getMyProducts = async () => {
   const token = localStorage.getItem('token')
 
+  const response = await fetch(`${API_URL}/products/mine`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || 'Gagal mengambil riwayat pengajuan'
+    )
+  }
+
+  return data
+}
+
+/**
+ * Memperbarui data produk milik mahasiswa.
+ *
+ * productData:
+ * {
+ *   categoryId,
+ *   name,
+ *   description,
+ *   initialFund,
+ *   targetFund,
+ *   launchDate
+ * }
+ */
+export const updateProduct = async (productId, productData) => {
+  const token = localStorage.getItem('token')
+
   const response = await fetch(
-    `${API_URL}/products/mine`,
+    `${API_URL}/products/${productId}`,
     {
-      method: 'GET',
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        category_id: productData.categoryId,
+        name: productData.name,
+        description: productData.description,
+        initial_fund: productData.initialFund,
+        target_fund: productData.targetFund,
+        launch_date: productData.launchDate || null,
+      }),
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    const validationErrors = data.errors
+      ? Object.values(data.errors).flat().join(' ')
+      : ''
+
+    throw new Error(
+      validationErrors ||
+        data.message ||
+        'Gagal memperbarui produk'
+    )
+  }
+
+  return data
+}
+
+export const deleteMyProduct = async (productId) => {
+  const token = localStorage.getItem('token')
+
+  const response = await fetch(
+    `${API_URL}/products/${productId}`,
+    {
+      method: 'DELETE',
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
@@ -337,8 +360,7 @@ export const getMyProducts = async () => {
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal mengambil riwayat pengajuan'
+      data.message || 'Gagal menghapus produk'
     )
   }
 
@@ -350,14 +372,10 @@ export const uploadProductImages = async (
   imageFiles
 ) => {
   const token = localStorage.getItem('token')
-
   const formData = new FormData()
 
   imageFiles.forEach((imageFile) => {
-    formData.append(
-      'images[]',
-      imageFile
-    )
+    formData.append('images[]', imageFile)
   })
 
   const response = await fetch(
@@ -376,15 +394,99 @@ export const uploadProductImages = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
+      : ''
+
+    throw new Error(
+      validationErrors || data.message || 'Gagal mengupload gambar'
+    )
+  }
+
+  return data
+}
+
+export const getProductImages = async (productId) => {
+  const token = localStorage.getItem('token')
+
+  const response = await fetch(
+    `${API_URL}/products/${productId}/images`,
+    {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || 'Gagal mengambil gambar produk'
+    )
+  }
+
+  return data
+}
+
+export const uploadProductDocument = async (
+  productId,
+  documentFile
+) => {
+  const token = localStorage.getItem('token')
+  const formData = new FormData()
+
+  formData.append('document', documentFile)
+
+  const response = await fetch(
+    `${API_URL}/products/${productId}/documents`,
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    const validationErrors = data.errors
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
       validationErrors ||
-      data.message ||
-      'Gagal mengupload gambar'
+        data.message ||
+        'Gagal mengupload dokumen produk'
+    )
+  }
+
+  return data
+}
+
+export const getProductDocuments = async (productId) => {
+  const token = localStorage.getItem('token')
+
+  const response = await fetch(
+    `${API_URL}/products/${productId}/documents`,
+    {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || 'Gagal mengambil dokumen produk'
     )
   }
 
@@ -416,16 +518,14 @@ export const getAdminProducts = async () => {
   if (!response.ok) {
     throw new Error(
       data.message ||
-      'Gagal mengambil data produk content manager'
+        'Gagal mengambil data produk content manager'
     )
   }
 
   return data
 }
 
-export const approveAdminProduct = async (
-  productId
-) => {
+export const approveAdminProduct = async (productId) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -443,8 +543,7 @@ export const approveAdminProduct = async (
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal menyetujui produk'
+      data.message || 'Gagal menyetujui produk'
     )
   }
 
@@ -467,8 +566,7 @@ export const rejectAdminProduct = async (
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        rejection_reason:
-          rejectionReason,
+        rejection_reason: rejectionReason,
       }),
     }
   )
@@ -477,15 +575,11 @@ export const rejectAdminProduct = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal menolak produk'
+      validationErrors || data.message || 'Gagal menolak produk'
     )
   }
 
@@ -508,8 +602,7 @@ export const updateAdminInvestment = async (
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        investment_amount:
-          investmentAmount,
+        investment_amount: investmentAmount,
       }),
     }
   )
@@ -518,24 +611,18 @@ export const updateAdminInvestment = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal memperbarui dana'
+      validationErrors || data.message || 'Gagal memperbarui dana'
     )
   }
 
   return data
 }
 
-export const deleteRejectedProduct = async (
-  productId
-) => {
+export const deleteRejectedProduct = async (productId) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -553,8 +640,7 @@ export const deleteRejectedProduct = async (
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal menghapus pengajuan produk'
+      data.message || 'Gagal menghapus pengajuan produk'
     )
   }
 
@@ -570,70 +656,52 @@ export const deleteRejectedProduct = async (
 export const getAdminUsers = async () => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(
-    `${API_URL}/admin/users`,
-    {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  )
+  const response = await fetch(`${API_URL}/admin/users`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      'Gagal mengambil data user'
-    )
+    throw new Error(data.message || 'Gagal mengambil data user')
   }
 
   return data
 }
 
-export const createAdminUser = async (
-  userData
-) => {
+export const createAdminUser = async (userData) => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(
-    `${API_URL}/admin/users`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(userData),
-    }
-  )
+  const response = await fetch(`${API_URL}/admin/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(userData),
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal menambahkan user'
+      validationErrors || data.message || 'Gagal menambahkan user'
     )
   }
 
   return data
 }
 
-export const updateAdminUser = async (
-  userId,
-  userData
-) => {
+export const updateAdminUser = async (userId, userData) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -653,24 +721,18 @@ export const updateAdminUser = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal memperbarui user'
+      validationErrors || data.message || 'Gagal memperbarui user'
     )
   }
 
   return data
 }
 
-export const deleteAdminUser = async (
-  userId
-) => {
+export const deleteAdminUser = async (userId) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -687,10 +749,7 @@ export const deleteAdminUser = async (
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      'Gagal menghapus user'
-    )
+    throw new Error(data.message || 'Gagal menghapus user')
   }
 
   return data
@@ -702,10 +761,7 @@ export const deleteAdminUser = async (
 |--------------------------------------------------------------------------
 */
 
-export const voteProduct = async (
-  productId,
-  score
-) => {
+export const voteProduct = async (productId, score) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -717,9 +773,7 @@ export const voteProduct = async (
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        score,
-      }),
+      body: JSON.stringify({ score }),
     }
   )
 
@@ -727,15 +781,13 @@ export const voteProduct = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
       validationErrors ||
-      data.message ||
-      'Gagal memberikan penilaian'
+        data.message ||
+        'Gagal memberikan penilaian'
     )
   }
 
@@ -748,49 +800,35 @@ export const voteProduct = async (
 |--------------------------------------------------------------------------
 */
 
-export const createAdminCategory = async (
-  name
-) => {
+export const createAdminCategory = async (name) => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(
-    `${API_URL}/admin/categories`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name,
-      }),
-    }
-  )
+  const response = await fetch(`${API_URL}/admin/categories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  })
 
   const data = await response.json()
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal menambahkan kategori'
+      validationErrors || data.message || 'Gagal menambahkan kategori'
     )
   }
 
   return data
 }
 
-export const updateAdminCategory = async (
-  categoryId,
-  name
-) => {
+export const updateAdminCategory = async (categoryId, name) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -802,9 +840,7 @@ export const updateAdminCategory = async (
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        name,
-      }),
+      body: JSON.stringify({ name }),
     }
   )
 
@@ -812,24 +848,18 @@ export const updateAdminCategory = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal memperbarui kategori'
+      validationErrors || data.message || 'Gagal memperbarui kategori'
     )
   }
 
   return data
 }
 
-export const deleteAdminCategory = async (
-  categoryId
-) => {
+export const deleteAdminCategory = async (categoryId) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -847,8 +877,7 @@ export const deleteAdminCategory = async (
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal menghapus kategori'
+      data.message || 'Gagal menghapus kategori'
     )
   }
 
@@ -879,17 +908,14 @@ export const getAdminNews = async () => {
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      'Gagal mengambil data berita'
+      data.message || 'Gagal mengambil data berita'
     )
   }
 
   return data
 }
 
-export const createAdminNews = async (
-  newsData
-) => {
+export const createAdminNews = async (newsData) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -909,25 +935,18 @@ export const createAdminNews = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal menambahkan berita'
+      validationErrors || data.message || 'Gagal menambahkan berita'
     )
   }
 
   return data
 }
 
-export const updateAdminNews = async (
-  newsId,
-  newsData
-) => {
+export const updateAdminNews = async (newsId, newsData) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -947,24 +966,18 @@ export const updateAdminNews = async (
 
   if (!response.ok) {
     const validationErrors = data.errors
-      ? Object.values(data.errors)
-          .flat()
-          .join(' ')
+      ? Object.values(data.errors).flat().join(' ')
       : ''
 
     throw new Error(
-      validationErrors ||
-      data.message ||
-      'Gagal memperbarui berita'
+      validationErrors || data.message || 'Gagal memperbarui berita'
     )
   }
 
   return data
 }
 
-export const deleteAdminNews = async (
-  newsId
-) => {
+export const deleteAdminNews = async (newsId) => {
   const token = localStorage.getItem('token')
 
   const response = await fetch(
@@ -981,10 +994,7 @@ export const deleteAdminNews = async (
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(
-      data.message ||
-      'Gagal menghapus berita'
-    )
+    throw new Error(data.message || 'Gagal menghapus berita')
   }
 
   return data

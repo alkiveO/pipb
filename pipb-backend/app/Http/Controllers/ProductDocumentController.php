@@ -70,13 +70,13 @@ class ProductDocumentController extends Controller
                 'required',
                 'file',
                 'mimes:pdf',
-                'min:10240',
+                'max:2048',
             ],
         ], [
             'document.required' => 'Dokumen pendukung wajib diunggah.',
             'document.file' => 'File dokumen tidak valid.',
             'document.mimes' => 'Dokumen pendukung harus berupa file PDF.',
-            'document.min' => 'Dokumen pendukung minimal berukuran 10 MB.',
+            'document.max' => 'Ukuran dokumen pendukung maksimal 2 MB.',
         ]);
 
         if ($product->documents()->exists()) {

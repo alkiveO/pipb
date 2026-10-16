@@ -20,10 +20,6 @@ function Hero({ onProducts }) {
   return (
     <section id="home" className="pb-20 pt-12 md:pb-28 md:pt-20">
       <Container>
-        <div className="flex flex-col justify-between gap-2 border-b border-line pb-6 text-xs uppercase tracking-[0.2em] text-muted md:flex-row md:items-center">
-          <p>Pusat Inkubasi dan Pengembangan Bisnis</p>
-          <p>STT Terpadu Nurul Fikri</p>
-        </div>
 
         <div className="mt-10 grid gap-10 md:mt-14 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:gap-12">
           <h1 className="font-sans text-5xl font-bold leading-[1.02] tracking-tight text-ink md:text-6xl lg:text-7xl">

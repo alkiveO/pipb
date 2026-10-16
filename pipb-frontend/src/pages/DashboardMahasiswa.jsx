@@ -9,6 +9,7 @@ import ProductDetail from './ProductDetail'
 import CreateProduct from './CreateProduct'
 import HistoryPengajuan from './HistoryPengajuan'
 import News from './News'
+import NewsDetail from './NewsDetail'
 import Container from '../components/ui/Container'
 import Navbar from '../components/layout/Navbar'
 
@@ -18,6 +19,9 @@ function DashboardMahasiswa({ onLogout }) {
 
   const [page, setPage] = useState('dashboard')
   const [selectedProductId, setSelectedProductId] = useState(null)
+  const [selectedNewsId, setSelectedNewsId] = useState(null)
+  const [productToEdit, setProductToEdit] = useState(null)
+
   const [products, setProducts] = useState([])
   const [notifications, setNotifications] = useState([])
 
@@ -26,6 +30,7 @@ function DashboardMahasiswa({ onLogout }) {
   const fetchDashboardData = async () => {
     try {
       setLoadingStats(true)
+
       const response = await getMyProducts()
       setProducts(response.data || [])
     } catch (error) {
@@ -36,32 +41,48 @@ function DashboardMahasiswa({ onLogout }) {
     }
   }
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (showLoading = true) => {
     try {
-      setLoadingNotifications(true)
+      if (showLoading) {
+        setLoadingNotifications(true)
+      }
+
       const response = await getNotifications()
       setNotifications(response.data || [])
     } catch (error) {
       console.error('Gagal mengambil notifikasi:', error)
-      setNotifications([])
     } finally {
-      setLoadingNotifications(false)
+      if (showLoading) {
+        setLoadingNotifications(false)
+      }
     }
   }
 
   useEffect(() => {
     fetchDashboardData()
     fetchNotifications()
+
+    const notificationInterval = setInterval(() => {
+      fetchNotifications(false)
+    }, 10000)
+
+    return () => {
+      clearInterval(notificationInterval)
+    }
   }, [])
 
   const handleNotificationClick = async (notification) => {
     try {
       if (!notification.read_at) {
         await markNotificationAsRead(notification.id)
+
         setNotifications((currentNotifications) =>
           currentNotifications.map((item) =>
             item.id === notification.id
-              ? { ...item, read_at: new Date().toISOString() }
+              ? {
+                  ...item,
+                  read_at: new Date().toISOString(),
+                }
               : item
           )
         )
@@ -72,15 +93,53 @@ function DashboardMahasiswa({ onLogout }) {
   }
 
   const goTo = (key) => {
+    if (key === 'news-detail' && selectedNewsId == null) {
+      return
+    }
+
+    if (key === 'create-product') {
+      setProductToEdit(null)
+    }
+
     setPage(key)
   }
 
-  // Sub-pages — semua dikirimi onNavigate & page
+  const handleCreateProduct = () => {
+    setProductToEdit(null)
+    setPage('create-product')
+  }
+
+  const handleEditProduct = (product) => {
+    if (!product?.id) {
+      console.error('Data produk untuk diedit tidak valid.')
+      return
+    }
+
+    setProductToEdit(product)
+    setPage('create-product')
+  }
+
+  const handleProductSuccess = async () => {
+    setProductToEdit(null)
+    await fetchDashboardData()
+    setPage('history')
+  }
+
+  const handleProductBack = () => {
+    if (productToEdit) {
+      setProductToEdit(null)
+      setPage('history')
+    } else {
+      setPage('products')
+    }
+  }
+
+  // Halaman Produk
   if (page === 'products') {
     return (
       <Products
         onBack={() => setPage('dashboard')}
-        onCreateProduct={() => setPage('create-product')}
+        onCreateProduct={handleCreateProduct}
         onProductDetail={(productId) => {
           setSelectedProductId(productId)
           setPage('product-detail')
@@ -91,6 +150,7 @@ function DashboardMahasiswa({ onLogout }) {
     )
   }
 
+  // Detail Produk
   if (page === 'product-detail') {
     return (
       <ProductDetail
@@ -102,34 +162,52 @@ function DashboardMahasiswa({ onLogout }) {
     )
   }
 
+  // Buat atau Edit Produk
   if (page === 'create-product') {
     return (
       <CreateProduct
-        onBack={() => setPage('products')}
-        onSuccess={() => {
-          setPage('products')
-          fetchDashboardData()
-        }}
+        productToEdit={productToEdit}
+        onBack={handleProductBack}
+        onSuccess={handleProductSuccess}
         onNavigate={goTo}
         page="create-product"
       />
     )
   }
 
+  // Riwayat Pengajuan
   if (page === 'history') {
     return (
       <HistoryPengajuan
         onBack={() => setPage('dashboard')}
         onNavigate={goTo}
+        onEditProduct={handleEditProduct}
         page="history"
       />
     )
   }
 
+  // Daftar Berita
   if (page === 'news') {
     return (
       <News
         onBack={() => setPage('dashboard')}
+        onNavigate={goTo}
+        page="news"
+        onOpenDetail={(newsId) => {
+          setSelectedNewsId(newsId)
+          setPage('news-detail')
+        }}
+      />
+    )
+  }
+
+  // Detail Berita
+  if (page === 'news-detail') {
+    return (
+      <NewsDetail
+        newsId={selectedNewsId}
+        onBack={() => setPage('news')}
         onNavigate={goTo}
         page="news"
       />
@@ -137,19 +215,26 @@ function DashboardMahasiswa({ onLogout }) {
   }
 
   const totalProducts = products.length
+
   const pendingProducts = products.filter(
     (product) => product.approval_status === 'pending_review'
   ).length
+
   const unreadNotifications = notifications.filter(
     (notification) => !notification.read_at
   ).length
 
   return (
     <div className="min-h-screen bg-paper">
-      <Navbar authenticated onNavigate={goTo} page="dashboard" />
+      <Navbar
+        authenticated
+        onNavigate={goTo}
+        page="dashboard"
+      />
 
       <main className="pb-24 pt-16">
         <Container>
+          {/* Header */}
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-muted">
               Dashboard Mahasiswa
@@ -171,40 +256,56 @@ function DashboardMahasiswa({ onLogout }) {
               <p className="text-xs uppercase tracking-[0.2em] text-muted">
                 Produk
               </p>
+
               <p className="mt-8 font-sans text-4xl font-bold text-ink">
                 {loadingStats ? '—' : totalProducts}
               </p>
-              <p className="mt-2 text-xs text-muted">Produk yang kamu miliki</p>
+
+              <p className="mt-2 text-xs text-muted">
+                Produk yang kamu miliki
+              </p>
             </div>
 
             <div className="flex flex-col justify-between bg-paper p-6">
               <p className="text-xs uppercase tracking-[0.2em] text-muted">
                 Pengajuan
               </p>
+
               <p className="mt-8 font-sans text-4xl font-bold text-ink">
                 {loadingStats ? '—' : pendingProducts}
               </p>
-              <p className="mt-2 text-xs text-muted">Produk sedang diproses</p>
+
+              <p className="mt-2 text-xs text-muted">
+                Produk sedang diproses
+              </p>
             </div>
 
             <div className="flex flex-col justify-between bg-paper p-6">
               <p className="text-xs uppercase tracking-[0.2em] text-muted">
                 Notifikasi
               </p>
+
               <p className="mt-8 font-sans text-4xl font-bold text-ink">
                 {loadingNotifications ? '—' : unreadNotifications}
               </p>
-              <p className="mt-2 text-xs text-muted">Belum dibaca</p>
+
+              <p className="mt-2 text-xs text-muted">
+                Belum dibaca
+              </p>
             </div>
 
             <div className="flex flex-col justify-between bg-paper p-6">
               <p className="text-xs uppercase tracking-[0.2em] text-muted">
                 Status
               </p>
+
               <p className="mt-8 font-sans text-4xl font-bold text-ink">
                 Aktif
               </p>
-              <p className="mt-2 text-xs text-muted">Status akun kamu</p>
+
+              <p className="mt-2 text-xs text-muted">
+                Status akun kamu
+              </p>
             </div>
           </div>
 
@@ -215,6 +316,7 @@ function DashboardMahasiswa({ onLogout }) {
                 <p className="text-xs uppercase tracking-[0.3em] text-muted">
                   Notifikasi
                 </p>
+
                 <h2 className="mt-3 font-sans text-2xl font-bold tracking-tight text-ink md:text-3xl">
                   Informasi Terbaru
                 </h2>
@@ -268,7 +370,10 @@ function DashboardMahasiswa({ onLogout }) {
 
                         {notificationData.feedback && (
                           <div className="mt-3 rounded-lg border border-line bg-surface/50 px-4 py-3 text-sm">
-                            <strong className="text-ink">Feedback:</strong>{' '}
+                            <strong className="text-ink">
+                              Feedback:
+                            </strong>{' '}
+
                             <span className="text-muted">
                               {notificationData.feedback}
                             </span>

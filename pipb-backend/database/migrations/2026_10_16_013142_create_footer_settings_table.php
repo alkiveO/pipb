@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('footer_settings', function (Blueprint $table) {
+            $table->id();
+
+            // Bagian kiri: identitas dan logo
+            $table->string('brand_name')->default('PIPB');
+            $table->string('logo_path')->nullable();
+            $table->text('description')->nullable();
+            $table->string('institution_name')->nullable();
+
+            // Bagian bawah kiri: copyright
+            $table->string('copyright_text')->nullable();
+            $table->boolean('use_current_year')->default(true);
+            $table->unsignedSmallInteger('copyright_year')->nullable();
+
+            // Bagian bawah kanan: kembali ke atas
+            $table->string('back_to_top_label')
+                ->default('Kembali ke atas ↑');
+            $table->string('back_to_top_href')->default('#home');
+            $table->boolean('show_back_to_top')->default(true);
+
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('footer_settings');
+    }
+};

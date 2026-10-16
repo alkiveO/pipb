@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Http\Requests\Request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\ProductApproved;
 use App\Notifications\ProductRevisionRequested;
+use App\Notifications\ProductRejected;
 
 class AdminProductController extends Controller
 {
@@ -35,7 +37,7 @@ class AdminProductController extends Controller
      */
     public function approve($id)
     {
-        $product = Product::with('images')->find($id);
+        $product = Product::with('user', 'images')->find($id);
 
         if (!$product) {
             return response()->json([
@@ -65,6 +67,12 @@ class AdminProductController extends Controller
             'rejection_reason' => null,
         ]);
 
+        $product->refresh();
+
+        $product->user->notify(
+            new ProductApproved($product)
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Produk berhasil dipublish.',
@@ -77,14 +85,7 @@ class AdminProductController extends Controller
     }
 
     /**
-     * Request Revision.
-     *
-     * Flow:
-     * Evaluate Product
-     * → Write Review / Feedback
-     * → Request Revision
-     * → Notify Owner for Revision
-     * → Status: Needs Revision
+     * Mengembalikan produk kepada mahasiswa untuk direvisi.
      */
     public function requestRevision(Request $request, $id)
     {
@@ -131,18 +132,11 @@ class AdminProductController extends Controller
     }
 
     /**
-     * Reject produk.
-     *
-     * Flow:
-     * Evaluate Product
-     * → Write Review / Feedback
-     * → Reject
-     * → Send Rejection Feedback
-     * → Status: Rejected
+     * Menolak produk dan mengirim notifikasi kepada pemiliknya.
      */
     public function reject(Request $request, $id)
     {
-        $product = Product::find($id);
+        $product = Product::with('user')->find($id);
 
         if (!$product) {
             return response()->json([
@@ -166,6 +160,12 @@ class AdminProductController extends Controller
             'approval_status' => Product::STATUS_REJECTED,
             'rejection_reason' => $validated['rejection_reason'],
         ]);
+
+        $product->refresh();
+
+        $product->user->notify(
+            new ProductRejected($product)
+        );
 
         return response()->json([
             'success' => true,

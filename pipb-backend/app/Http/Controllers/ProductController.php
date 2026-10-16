@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     /**
-     * Menampilkan produk yang sudah published
-     * untuk katalog publik.
+     * Menampilkan produk published untuk katalog publik.
      */
     public function index()
     {
@@ -20,11 +19,8 @@ class ProductController extends Controller
                 'images',
             ])
             ->withCount('votes')
-            ->withAvg('votes', 'score')
-            ->where(
-                'approval_status',
-                Product::STATUS_PUBLISHED
-            )
+            ->withAvg('votes', 'overall_score')
+            ->where('approval_status', Product::STATUS_PUBLISHED)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -35,7 +31,8 @@ class ProductController extends Controller
     }
 
     /**
-     * Menampilkan detail produk yang sudah published.
+     * Menampilkan detail produk published beserta
+     * seluruh rating dan review Content Manager.
      */
     public function show($id)
     {
@@ -43,13 +40,11 @@ class ProductController extends Controller
                 'user',
                 'category',
                 'images',
+                'votes.contentManager',
             ])
             ->withCount('votes')
-            ->withAvg('votes', 'score')
-            ->where(
-                'approval_status',
-                Product::STATUS_PUBLISHED
-            )
+            ->withAvg('votes', 'overall_score')
+            ->where('approval_status', Product::STATUS_PUBLISHED)
             ->find($id);
 
         if (!$product) {
@@ -75,11 +70,8 @@ class ProductController extends Controller
                 'images',
             ])
             ->withCount('votes')
-            ->withAvg('votes', 'score')
-            ->where(
-                'user_id',
-                $request->user()->id
-            )
+            ->withAvg('votes', 'overall_score')
+            ->where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -112,11 +104,7 @@ class ProductController extends Controller
             'target_fund' => $validated['target_fund'],
             'investment_amount' => $validated['initial_fund'],
             'launch_date' => $validated['launch_date'] ?? null,
-
-            // Sesuai flow mentor:
-            // produk baru masuk Pending Review.
             'approval_status' => Product::STATUS_PENDING_REVIEW,
-
             'launch_status' => 'belum_launch',
             'rejection_reason' => null,
         ]);
@@ -133,8 +121,8 @@ class ProductController extends Controller
     }
 
     /**
-     * Mahasiswa memperbaiki produk
-     * setelah Content Manager meminta revisi.
+     * Mahasiswa memperbaiki produk yang membutuhkan
+     * revisi atau sudah ditolak.
      */
     public function update(Request $request, $id)
     {
@@ -147,47 +135,32 @@ class ProductController extends Controller
             ], 404);
         }
 
-        if ($product->user_id !== $request->user()->id) {
+        if ((int) $product->user_id !== (int) $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki akses untuk mengubah produk ini.',
             ], 403);
         }
 
-        /*
-         * Sesuai flow mentor:
-         *
-         * Content Manager
-         *        ↓
-         * Request Revision
-         *        ↓
-         * Needs Revision
-         *        ↓
-         * Owner Revise Product
-         *
-         * Jadi produk hanya dapat diedit ketika
-         * statusnya needs_revision.
-         */
-        if (!$product->needsRevision()) {
+        if (
+            !$product->needsRevision() &&
+            !$product->isRejected()
+        ) {
             return response()->json([
                 'success' => false,
-                'message' => 'Produk hanya dapat diedit ketika membutuhkan revisi.',
+                'message' => 'Produk hanya dapat diedit jika membutuhkan revisi atau berstatus ditolak.',
             ], 422);
         }
 
         $validated = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'initial_fund' => 'sometimes|numeric|min:0',
-            'target_fund' => 'sometimes|numeric|min:0',
-            'launch_date' => 'nullable|date',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+            'initial_fund' => 'sometimes|required|numeric|min:0',
+            'target_fund' => 'sometimes|required|numeric|min:0',
+            'launch_date' => 'sometimes|nullable|date',
         ]);
 
-        /*
-         * Jika initial_fund diubah, investment_amount
-         * mengikuti nilai initial_fund mahasiswa.
-         */
         $updateData = $validated;
 
         if (array_key_exists('initial_fund', $validated)) {
@@ -195,10 +168,6 @@ class ProductController extends Controller
                 $validated['initial_fund'];
         }
 
-        /*
-         * Setelah direvisi dan dikirim kembali,
-         * status kembali ke Pending Review.
-         */
         $updateData['approval_status'] =
             Product::STATUS_PENDING_REVIEW;
 
@@ -209,7 +178,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Produk berhasil diperbarui dan diajukan kembali untuk review.',
-            'data' => $product->load([
+            'data' => $product->fresh()->load([
                 'user',
                 'category',
                 'images',
@@ -223,7 +192,10 @@ class ProductController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $product = Product::with('images')->find($id);
+        $product = Product::with([
+            'images',
+            'documents',
+        ])->find($id);
 
         if (!$product) {
             return response()->json([
@@ -232,20 +204,13 @@ class ProductController extends Controller
             ], 404);
         }
 
-        if ($product->user_id !== $request->user()->id) {
+        if ((int) $product->user_id !== (int) $request->user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki akses untuk menghapus produk ini.',
             ], 403);
         }
 
-        /*
-         * Produk yang sudah published sudah menjadi
-         * bagian dari katalog publik.
-         *
-         * Karena itu mahasiswa tidak boleh menghapus
-         * produk yang sudah published.
-         */
         if ($product->isPublished()) {
             return response()->json([
                 'success' => false,
@@ -255,9 +220,13 @@ class ProductController extends Controller
 
         foreach ($product->images as $image) {
             if ($image->image_path) {
-                Storage::disk('public')->delete(
-                    $image->image_path
-                );
+                Storage::disk('public')->delete($image->image_path);
+            }
+        }
+
+        foreach ($product->documents as $document) {
+            if ($document->document_path) {
+                Storage::disk('public')->delete($document->document_path);
             }
         }
 

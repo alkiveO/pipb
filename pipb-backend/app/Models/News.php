@@ -11,7 +11,18 @@ class News extends Model
         'admin_id',
         'title',
         'content',
+        'image',
+        'event_date',
+        'event_time',
+        'location',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'event_date' => 'date',
+        ];
+    }
 
     public function admin(): BelongsTo
     {

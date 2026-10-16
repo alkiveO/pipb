@@ -12,6 +12,13 @@ use App\Http\Controllers\ProductDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProductVoteController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Api\AboutController;
+use App\Http\Controllers\Api\HowItWorksController;
+use App\Http\Controllers\Api\ReviewerController;
+use App\Http\Controllers\Api\NavbarItemController;
+use App\Http\Controllers\Api\NavbarSettingController;
+use App\Http\Controllers\Api\FooterLinkController;
+use App\Http\Controllers\Api\FooterSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +49,71 @@ Route::middleware('auth:sanctum')->group(function () {
         [NotificationController::class, 'markAsRead']
     );
 });
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC NAVBAR
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/navbar-items',
+    [NavbarItemController::class, 'index']
+);
+
+Route::get(
+    '/navbar-settings',
+    [NavbarSettingController::class, 'index']
+);
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC FOOTER
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/footer-links',
+    [FooterLinkController::class, 'index']
+);
+
+Route::get(
+    '/footer-settings',
+    [FooterSettingController::class, 'index']
+);
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ABOUT
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/about',
+    [AboutController::class, 'index']
+);
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC HOW IT WORKS
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/how-it-works',
+    [HowItWorksController::class, 'index']
+);
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC REVIEWERS
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/reviewers',
+    [ReviewerController::class, 'index']
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -192,108 +264,40 @@ Route::get(
 |--------------------------------------------------------------------------
 | CONTENT MANAGER - PRODUCTS
 |--------------------------------------------------------------------------
-|
-| Flow:
-|
-| View Submitted Products
-|        ↓
-| Select Product
-|        ↓
-| Evaluate Product
-|        ↓
-| Assign Score / Rating
-|        ↓
-| Write Review / Feedback
-|        ↓
-| Publish Decision
-|    ┌────┼───────────────┐
-|    ↓    ↓               ↓
-| Reject  Request         Approve
-|         Revision          ↓
-|    ↓      ↓           Published
-| Rejected Needs
-|          Revision
-|
-|--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth:sanctum', 'content_manager'])
     ->prefix('content-manager')
     ->group(function () {
-
-        /*
-        |------------------------------------------------------------------
-        | View Submitted Products
-        |------------------------------------------------------------------
-        */
-
         Route::get(
             '/products',
             [AdminProductController::class, 'index']
         );
-
-        /*
-        |------------------------------------------------------------------
-        | Evaluate Product
-        | Assign Score / Rating
-        | Write Review / Feedback
-        |------------------------------------------------------------------
-        */
 
         Route::post(
             '/products/{id}/evaluation',
             [ProductVoteController::class, 'store']
         );
 
-        /*
-        |------------------------------------------------------------------
-        | Publish Decision - Approve
-        |------------------------------------------------------------------
-        */
-
         Route::put(
             '/products/{id}/approve',
             [AdminProductController::class, 'approve']
         );
-
-        /*
-        |------------------------------------------------------------------
-        | Publish Decision - Request Revision
-        |------------------------------------------------------------------
-        */
 
         Route::put(
             '/products/{id}/request-revision',
             [AdminProductController::class, 'requestRevision']
         );
 
-        /*
-        |------------------------------------------------------------------
-        | Publish Decision - Reject
-        |------------------------------------------------------------------
-        */
-
         Route::put(
             '/products/{id}/reject',
             [AdminProductController::class, 'reject']
         );
 
-        /*
-        |------------------------------------------------------------------
-        | Investment
-        |------------------------------------------------------------------
-        */
-
         Route::put(
             '/products/{id}/investment',
             [AdminProductController::class, 'investment']
         );
-
-        /*
-        |------------------------------------------------------------------
-        | Administrative Delete
-        |------------------------------------------------------------------
-        */
 
         Route::delete(
             '/products/{id}',
@@ -310,7 +314,6 @@ Route::middleware(['auth:sanctum', 'content_manager'])
 Route::middleware(['auth:sanctum', 'content_manager'])
     ->prefix('content-manager')
     ->group(function () {
-
         Route::get(
             '/news',
             [AdminNewsController::class, 'index']
@@ -346,7 +349,6 @@ Route::middleware(['auth:sanctum', 'content_manager'])
 Route::middleware(['auth:sanctum', 'admin'])
     ->prefix('admin')
     ->group(function () {
-
         Route::get(
             '/users',
             [AdminUserController::class, 'index']
