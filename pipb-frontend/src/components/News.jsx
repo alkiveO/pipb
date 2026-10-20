@@ -85,15 +85,14 @@ function News({ onNavigate, page = 'home' }) {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+      timeZone: 'UTC',
     })
   }
 
   const items = news.length > 0
     ? news.slice(0, 5).map((item) => ({
         ...item,
-        date: formatDate(
-          item.published_at || item.created_at
-        ),
+        date: formatDate(item.event_date),
         imageUrl: getImageUrl(
           item.image ||
           item.poster ||
