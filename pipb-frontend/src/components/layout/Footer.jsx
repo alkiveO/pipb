@@ -40,50 +40,48 @@ function Footer() {
   const [columns, setColumns] = useState(defaultColumns)
 
   useEffect(() => {
+    let active = true
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000) // Maksimal nunggu 3 detik
+
     const fetchFooterData = async () => {
       try {
         const [settingsResponse, linksResponse] = await Promise.all([
-          fetch(`${API_URL}/footer-settings`),
-          fetch(`${API_URL}/footer-links`),
+          fetch(`${API_URL}/footer-settings`, { signal: controller.signal }),
+          fetch(`${API_URL}/footer-links`, { signal: controller.signal }),
         ])
 
-        if (!settingsResponse.ok || !linksResponse.ok) {
-          throw new Error('Gagal mengambil data footer.')
-        }
+        if (!settingsResponse.ok || !linksResponse.ok) return
 
         const settingsResult = await settingsResponse.json()
         const linksResult = await linksResponse.json()
 
-        if (settingsResult.success && settingsResult.data) {
-          setSettings((previous) => ({
-            ...previous,
-            ...settingsResult.data,
-          }))
+        if (active && settingsResult.success && settingsResult.data) {
+          setSettings((previous) => ({ ...previous, ...settingsResult.data }))
         }
 
-        if (
-          linksResult.success &&
-          Array.isArray(linksResult.data) &&
-          linksResult.data.length > 0
-        ) {
+        if (active && linksResult.success && Array.isArray(linksResult.data) && linksResult.data.length > 0) {
           setColumns(linksResult.data)
         }
       } catch (error) {
-        console.error('Gagal memuat footer:', error)
+        // Diamkan saja jika error/timeout
       }
     }
 
     fetchFooterData()
+
+    return () => {
+      active = false
+      clearTimeout(timeoutId)
+      controller.abort()
+    }
   }, [])
 
-  const copyrightYear = settings.use_current_year
-    ? new Date().getFullYear()
-    : settings.copyright_year
+  const copyrightYear = settings.use_current_year ? new Date().getFullYear() : settings.copyright_year
 
   return (
     <footer className="border-t border-line bg-surface">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-16 md:grid-cols-[1.3fr_1fr_1fr] md:py-20">
-        {/* Identitas dan logo */}
         <div>
           {settings.logo_url ? (
             <img
@@ -110,20 +108,15 @@ function Footer() {
           )}
         </div>
 
-        {/* Link navigasi dan akun dari API */}
         {columns.map((column, index) => (
           <nav key={`${column.title}-${index}`}>
             <p className="text-xs uppercase tracking-[0.2em] text-muted">
               {column.title}
             </p>
-
             <ul className="mt-4 space-y-3 text-sm">
               {(column.links || []).map((link) => (
                 <li key={link.id ?? `${link.label}-${link.href}`}>
-                  <a
-                    href={link.href}
-                    className="text-muted transition-colors hover:text-ink"
-                  >
+                  <a href={link.href} className="text-muted transition-colors hover:text-ink">
                     {link.label}
                   </a>
                 </li>
@@ -133,24 +126,16 @@ function Footer() {
         ))}
       </div>
 
-      {/* Copyright dan tombol kembali ke atas */}
       <div className="border-t border-line">
         <div className="mx-auto flex w-full max-w-6xl flex-col justify-between gap-4 px-6 py-6 text-xs text-muted md:flex-row md:items-center">
           <p>
             © {copyrightYear} {settings.brand_name}
-            {settings.institution_name
-              ? ` — ${settings.institution_name}`
-              : ''}
-            {settings.copyright_text
-              ? `. ${settings.copyright_text}`
-              : ''}
+            {settings.institution_name ? ` — ${settings.institution_name}` : ''}
+            {settings.copyright_text ? `. ${settings.copyright_text}` : ''}
           </p>
 
           {settings.show_back_to_top && (
-            <a
-              href={settings.back_to_top_href || '#home'}
-              className="transition-colors hover:text-ink"
-            >
+            <a href={settings.back_to_top_href || '#home'} className="transition-colors hover:text-ink">
               {settings.back_to_top_label}
             </a>
           )}

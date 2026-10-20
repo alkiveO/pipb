@@ -55,7 +55,7 @@ function Hero({ onProducts }) {
         <div className="relative mt-16 overflow-hidden rounded-3xl bg-ink md:mt-20">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,247,241,0.12),transparent_55%)]" />
 
-          <div className="relative flex min-h-[18rem] flex-col justify-between p-6 text-paper md:min-h-[22rem] md:p-10">
+          <div className="relative flex min-h-72 flex-col justify-between p-6 text-paper md:min-h-88 md:p-10">
             <div className="flex items-start justify-between text-xs uppercase tracking-[0.25em] text-paper/50">
               <p>Innovation</p>
               <p>PIPB / 2026</p>
