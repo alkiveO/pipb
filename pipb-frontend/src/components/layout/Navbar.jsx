@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 
 const API_BASE = 'http://127.0.0.1:8000/api'
 
-// LANGSUNG TAMPIL DENGAN DATA INI
 const defaultGuestLinks = [
   { id: 'home', href: '#home', label: 'Home', type: 'link' },
   { id: 'tentang', href: '#tentang', label: 'Tentang', type: 'link' },
@@ -33,17 +32,18 @@ function Navbar({
 
   useEffect(() => {
     let active = true
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000) // Maksimal nunggu 3 detik
 
     const fetchNavbarItems = async () => {
       try {
         const response = await fetch(`${API_BASE}/navbar-items`, {
-          headers: { Accept: 'application/json' },
-          signal: controller.signal
+          headers: {
+            Accept: 'application/json',
+          },
         })
 
-        if (!response.ok) return
+        if (!response.ok) {
+          throw new Error('Gagal mengambil menu Navbar')
+        }
 
         const result = await response.json()
 
@@ -57,18 +57,21 @@ function Navbar({
           )
         }
       } catch (error) {
-        // Diamkan saja jika error/timeout
+        console.error('Gagal memuat menu Navbar:', error)
       }
     }
 
     const fetchNavbarSettings = async () => {
       try {
         const response = await fetch(`${API_BASE}/navbar-settings`, {
-          headers: { Accept: 'application/json' },
-          signal: controller.signal
+          headers: {
+            Accept: 'application/json',
+          },
         })
 
-        if (!response.ok) return
+        if (!response.ok) {
+          throw new Error('Gagal mengambil pengaturan Navbar')
+        }
 
         const result = await response.json()
 
@@ -79,7 +82,7 @@ function Navbar({
           })
         }
       } catch (error) {
-        // Diamkan saja jika error/timeout
+        console.error('Gagal memuat pengaturan Navbar:', error)
       }
     }
 
@@ -88,19 +91,24 @@ function Navbar({
 
     return () => {
       active = false
-      clearTimeout(timeoutId)
-      controller.abort()
     }
   }, [])
 
   const handleLogout = async () => {
     const token = localStorage.getItem('token')
+
     try {
       await fetch(`${API_BASE}/logout`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
       })
-    } catch (error) {}
+    } catch (error) {
+      console.error('Logout gagal:', error)
+    }
+
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     window.location.href = '/login'
@@ -122,10 +130,14 @@ function Navbar({
           alt=""
           className="h-10 w-auto max-w-40 shrink-0 object-contain"
           onError={() => {
-            setNavbarSettings((current) => ({ ...current, logo_url: null }))
+            setNavbarSettings((current) => ({
+              ...current,
+              logo_url: null,
+            }))
           }}
         />
       )}
+
       <span className="whitespace-nowrap text-xl font-bold tracking-tight text-ink">
         {navbarSettings.brand_name || 'PIPB'}
       </span>
@@ -141,7 +153,12 @@ function Navbar({
           : 'text-muted transition-colors hover:text-ink'
 
     return (
-      <a key={link.id} href={link.href} onClick={() => setMenuOpen(false)} className={className}>
+      <a
+        key={link.id}
+        href={link.href}
+        onClick={() => setMenuOpen(false)}
+        className={className}
+      >
         {link.label}
       </a>
     )
@@ -150,7 +167,12 @@ function Navbar({
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <button type="button" onClick={handleBrandClick} className="shrink-0 text-left" aria-label="PIPB">
+        <button
+          type="button"
+          onClick={handleBrandClick}
+          className="shrink-0 text-left"
+          aria-label={navbarSettings.brand_name || 'PIPB'}
+        >
           {renderBrand()}
         </button>
 
@@ -163,7 +185,11 @@ function Navbar({
                   key={link.page}
                   type="button"
                   onClick={() => onNavigate && onNavigate(link.page)}
-                  className={`transition-colors ${page === link.page ? 'font-medium text-ink' : 'text-muted hover:text-ink'}`}
+                  className={`transition-colors ${
+                    page === link.page
+                      ? 'font-medium text-ink'
+                      : 'text-muted hover:text-ink'
+                  }`}
                 >
                   {link.label}
                 </button>
@@ -175,9 +201,15 @@ function Navbar({
 
         <div className="hidden items-center gap-3 md:flex">
           {!authenticated ? (
-            guestLinks.filter((link) => link.type === 'cta').map((link) => renderGuestLink(link))
+            guestLinks
+              .filter((link) => link.type === 'cta')
+              .map((link) => renderGuestLink(link))
           ) : (
-            <button type="button" onClick={handleLogout} className="rounded-full border border-ink px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-full border border-ink px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+            >
               Logout
             </button>
           )}
@@ -187,6 +219,8 @@ function Navbar({
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
           className="text-sm font-medium md:hidden"
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
         >
           {menuOpen ? 'Tutup' : 'Menu'}
         </button>
@@ -200,8 +234,15 @@ function Navbar({
                 <button
                   key={link.page}
                   type="button"
-                  onClick={() => { onNavigate && onNavigate(link.page); setMenuOpen(false); }}
-                  className={`text-left ${page === link.page ? 'font-medium text-ink' : 'text-muted'}`}
+                  onClick={() => {
+                    onNavigate && onNavigate(link.page)
+                    setMenuOpen(false)
+                  }}
+                  className={`text-left ${
+                    page === link.page
+                      ? 'font-medium text-ink'
+                      : 'text-muted'
+                  }`}
                 >
                   {link.label}
                 </button>
@@ -209,13 +250,20 @@ function Navbar({
                 renderGuestLink(link, true)
               )
             )}
+
             <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
               {authenticated ? (
-                <button type="button" onClick={handleLogout} className="rounded-full border border-ink px-5 py-2 text-sm font-medium text-ink">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-full border border-ink px-5 py-2 text-sm font-medium text-ink"
+                >
                   Logout
                 </button>
               ) : (
-                guestLinks.filter((link) => link.type === 'cta').map((link) => renderGuestLink(link, true))
+                guestLinks
+                  .filter((link) => link.type === 'cta')
+                  .map((link) => renderGuestLink(link, true))
               )}
             </div>
           </div>
